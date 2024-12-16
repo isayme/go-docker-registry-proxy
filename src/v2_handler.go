@@ -11,7 +11,6 @@ import (
 
 func V2Handler(c *gin.Context) {
 	method := c.Request.Method
-	host := c.Request.Host
 	reqHeader := c.Request.Header
 	path := c.Request.URL.Path
 
@@ -38,16 +37,37 @@ func V2Handler(c *gin.Context) {
 	authenticate, ok := ParseWwwAuthenticate(authenticateInText)
 	if ok {
 		// set realm so that client will get token from this service
-		proto := c.GetHeader(HTTP_HEADER_X_FORWARDED_PROTO)
-		if proto == "" {
-			proto = HTTP_PROTO_HTTP
-		}
-		realm := fmt.Sprintf("%s://%s%s?authenticate=%s", proto, host, "/__token__", base64.URLEncoding.EncodeToString([]byte(authenticateInText)))
+		url := getTokenUrl(c)
+		realm := fmt.Sprintf("%s%s?authenticate=%s", url, "/__token__", base64.URLEncoding.EncodeToString([]byte(authenticateInText)))
 		authenticate.Realm = realm
 		resp.Header.Set(HTTP_HEADER_WWW_AUTHENTICATE, authenticate.String())
 	}
 
 	copyResponse(c, resp)
+}
+
+func getTokenUrl(c *gin.Context) string {
+	host := c.GetHeader(HTTP_HEADER_X_FORWARDED_HOST)
+	proto := c.GetHeader(HTTP_HEADER_X_FORWARDED_PROTO)
+	port := c.GetHeader(HTTP_HEADER_X_FORWARDED_PORT)
+
+	if proto == "" || host == "" {
+		proto = HTTP_PROTO_HTTP
+		if c.Request.TLS != nil {
+			proto = HTTP_PROTO_HTTPS
+		}
+		host = c.Request.Host
+
+		return fmt.Sprintf("%s://%s", proto, host)
+	}
+
+	if port == "" ||
+		(proto == HTTP_PROTO_HTTP && port == HTTP_PORT_80) ||
+		(proto == HTTP_PROTO_HTTPS && port == HTTP_PORT_443) {
+		return fmt.Sprintf("%s://%s", proto, host)
+	}
+
+	return fmt.Sprintf("%s://%s:%s", proto, host, port)
 }
 
 func routeByHost(c *gin.Context) string {
