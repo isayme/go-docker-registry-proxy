@@ -24,10 +24,7 @@ func V2Handler(c *gin.Context) {
 		return
 	}
 
-	newReq.Header = make(http.Header)
-	for key := range reqHeader {
-		newReq.Header.Set(key, reqHeader.Get(key))
-	}
+	copyRequest(newReq, reqHeader)
 
 	resp, err := http.DefaultClient.Do(newReq)
 	if err != nil {
@@ -37,17 +34,17 @@ func V2Handler(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	authenticateInText := resp.Header.Get("WWW-Authenticate")
+	authenticateInText := resp.Header.Get(HTTP_HEADER_WWW_AUTHENTICATE)
 	authenticate, ok := ParseWwwAuthenticate(authenticateInText)
 	if ok {
 		// set realm so that client will get token from this service
-		proto := c.GetHeader("X-Forwarded-Proto")
+		proto := c.GetHeader(HTTP_HEADER_X_FORWARDED_PROTO)
 		if proto == "" {
-			proto = "http"
+			proto = HTTP_PROTO_HTTP
 		}
 		realm := fmt.Sprintf("%s://%s%s?authenticate=%s", proto, host, "/__token__", base64.URLEncoding.EncodeToString([]byte(authenticateInText)))
 		authenticate.Realm = realm
-		resp.Header.Set("WWW-Authenticate", authenticate.String())
+		resp.Header.Set(HTTP_HEADER_WWW_AUTHENTICATE, authenticate.String())
 	}
 
 	copyResponse(c, resp)

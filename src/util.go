@@ -8,6 +8,18 @@ import (
 	"github.com/isayme/go-logger"
 )
 
+func copyRequest(req *http.Request, headers http.Header) {
+	reqHeaders := req.Header
+	if reqHeaders == nil {
+		reqHeaders = make(http.Header)
+		req.Header = reqHeaders
+	}
+
+	for key := range headers {
+		reqHeaders.Set(key, headers.Get(key))
+	}
+}
+
 func copyResponse(c *gin.Context, resp *http.Response) {
 	// c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("content-type"), resp.Body, nil)
 

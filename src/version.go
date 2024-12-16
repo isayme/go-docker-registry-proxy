@@ -8,7 +8,7 @@ import (
 
 // version info
 var (
-	Name        = "@isayme/go-docker-registry-proxy"
+	Name        = "@isayme/docker-registry-proxy"
 	Version     = "unknown"
 	BuildTime   = "unknown"
 	GitRevision = "unknown"

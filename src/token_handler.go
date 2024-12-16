@@ -50,10 +50,7 @@ func getToken(c *gin.Context, authenticate *WwwAuthenticate) {
 	}
 
 	headers := c.Request.Header
-	req.Header = make(http.Header)
-	for key := range headers {
-		req.Header.Set(key, headers.Get(key))
-	}
+	copyRequest(req, headers)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

@@ -18,7 +18,7 @@ func ParseWwwAuthenticate(v string) (*WwwAuthenticate, bool) {
 	}
 
 	headerParts := strings.Split(v, " ")
-	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+	if len(headerParts) != 2 || headerParts[0] != BEARER {
 		return nil, false
 	}
 
@@ -29,11 +29,11 @@ func ParseWwwAuthenticate(v string) (*WwwAuthenticate, bool) {
 			key := keyValue[0]
 			value := strings.Trim(keyValue[1], `"`)
 
-			if key == "scope" {
+			if key == SCOPE {
 				result.Scope = value
-			} else if key == "realm" {
+			} else if key == REALM {
 				result.Realm = value
-			} else if key == "service" {
+			} else if key == SERVICE {
 				result.Service = value
 			} else {
 				result.Extras[key] = value
@@ -48,16 +48,16 @@ func (info *WwwAuthenticate) String() string {
 	keyValus := []string{}
 
 	if info.Realm != "" {
-		keyValus = append(keyValus, fmt.Sprintf(`realm="%s"`, info.Realm))
+		keyValus = append(keyValus, fmt.Sprintf(`%s="%s"`, REALM, info.Realm))
 	} else if info.Service != "" {
-		keyValus = append(keyValus, fmt.Sprintf(`service="%s"`, info.Service))
+		keyValus = append(keyValus, fmt.Sprintf(`%s="%s"`, SERVICE, info.Service))
 	} else if info.Scope != "" {
-		keyValus = append(keyValus, fmt.Sprintf(`scope="%s"`, info.Scope))
+		keyValus = append(keyValus, fmt.Sprintf(`%s="%s"`, SCOPE, info.Scope))
 	} else {
 		for key, value := range info.Extras {
 			keyValus = append(keyValus, fmt.Sprintf(`%s="%s"`, key, value))
 		}
 	}
 
-	return fmt.Sprintf("Bearer %s", strings.Join(keyValus, ","))
+	return fmt.Sprintf("%s %s", BEARER, strings.Join(keyValus, ","))
 }
